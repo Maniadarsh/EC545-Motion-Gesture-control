@@ -20,7 +20,7 @@ The user holds the Control Arduino in her/his hand. Upon power-on, The LED matri
 # Message Sequence between components
 
 ![Sequence Diagram](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/blob/main/pictures/SequenceDiagram.png)
-
+[Link to Edit](https://lucid.app/lucidchart/36681cb7-d538-4060-a365-803737bf8723/edit?viewport_loc=144%2C254%2C1732%2C822%2C0_0&invitationId=inv_58f1c76f-a07f-45b2-a2c0-2ab4e1ce7ecc)
 
 
 # State Transition
