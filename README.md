@@ -19,7 +19,7 @@ The user holds the Control Arduino in her/his hand. Upon power-on, The LED matri
 
 # Message Sequence between components
 
-
+![Sequence Diagram](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/blob/main/pictures/SequenceDiagram.png)
 
 
 
