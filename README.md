@@ -5,7 +5,7 @@ Group Name: MGC
 # Introduction
 Our Topic: Motion Gesture Control (abbrevated as MGC) is a trend of Human Machine Interface (HMI). It is a good demonstration of cyber-physical system because it translate the movement of object in physical world into digital signal. Our project aims at prototyping of a wireless hand-motion capturing system. We will prove our concept by a interactive game.  
 
-# Hardware Deployment
+# Hardware Deployment [Reference](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/wiki#datasheet-and-example) 
 * Arduino #1: Control
   * Accelerometer 
   * Wireless Module 
@@ -24,5 +24,22 @@ The user holds the Control Arduino in her/his hand. Upon power-on, The LED matri
 
 
 # State Transition
+
+# Why we use FreeRTOS
+
+FreeRTOS is the most popular Real-time Operating System for embedded system. It uses a fixed-priority preemptive scheduling policy, with round-robin time-slicing of equal priority tasks ([FreeRTOS](https://freertos.org/index.html)). Each task in the operating system can work independently, while the scheduler ensures CPU resource will not be occupied by a single function for a long time. In our application, multiple tasks and components works at the same time, and they all have different scales of execution time, that being said we cannot simply put everything in one single while loop. The best way to make them orchestrate smoothly is to use FreeRTOS. Besides, the Arduino community has abundant support and discussion in FreeRTOS, making related development easy.
+
+## Tasks Description 
+### Arduino #1 Control Tasks
+* Accelerometer Driver: Decide the current direction of motion 
+* RF Transmitter: Send Command through RF module
+* Status LED Blinker: Show current state on on-board LED by changing blinking frequency
+* Serial Port: Send debug message through UART
+
+### Arduino #2 Display Tasks
+* LED Matrix: Control LED matrix display and host the game scoring system
+* RF Receiver: Receive command from RF module
+* Status LED Blinker: Show current state on on-board LED by changing blinking frequency
+* Serial Port: Send debug message through UART
 
 
