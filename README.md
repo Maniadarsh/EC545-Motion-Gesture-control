@@ -27,7 +27,7 @@ The user holds the Control Arduino in her/his hand. Upon power-on, The LED matri
 
 # Why we use FreeRTOS
 
-FreeRTOS is the most popular Real-time Operating System for embedded system. It uses a fixed-priority preemptive scheduling policy, with round-robin time-slicing of equal priority tasks ([FreeRTOS](https://freertos.org/index.html)). Each task in the operating system can work independently, while the scheduler ensures CPU resource will not be occupied by a single function for a long time. In our application, multiple tasks and components works at the same time, and they all have different scales of execution time, that being said we cannot simply put everything in one single while loop. The best way to make them orchestrate smoothly is to use FreeRTOS. Besides, the Arduino community has abundant support and discussion in FreeRTOS, making related development easy.
+FreeRTOS is the most popular Real-time Operating System for embedded system. It uses a fixed-priority preemptive scheduling policy, with round-robin time-slicing of equal priority tasks ([FreeRTOS website](https://freertos.org/index.html)). Each task in the operating system can work independently, while the scheduler ensures CPU resource will not be occupied by a single function for a long time. In our application, multiple tasks and components works at the same time, and they all have different scales of execution time, that being said we cannot simply put everything in one single while loop. The best way to make them orchestrate smoothly is to use FreeRTOS. Besides, the Arduino community has abundant support and discussion in FreeRTOS, making related development easy.
 
 ## Tasks Description 
 ### Arduino #1 Control Tasks
