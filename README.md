@@ -3,7 +3,7 @@ Cyberphysical systems project repository.
 Group Name: MGC
 
 # Introduction
-Our Topic: Motion Gesture Control (abbrevated as MGC) is a trend of Human Machine Interface (HMI). It is a good demonstration of cyber-physical system because it translate the movement of object in physical world into digital signal. Our project aims at prototyping of a wireless hand-motion capturing system. We will prove our concept by a interactive game.  
+Our Topic: Motion Gesture Control (abbrevated as MGC) is a trend of Human Machine Interface (HMI). It is a good demonstration of cyber-physical system because it translate the movement of object in physical world into digital signal. Our project aims at prototyping of a wireless hand-motion capturing system. We will prove our concept by a interactive game. Our software will run on Arduino Uno board with FreeRTOS
 
 # Hardware Deployment [Reference](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/wiki#datasheet-and-example) 
 * Arduino #1: Control
