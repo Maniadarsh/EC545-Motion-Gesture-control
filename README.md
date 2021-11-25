@@ -43,3 +43,5 @@ FreeRTOS is the most popular Real-time Operating System for embedded system. It 
 * Serial Port: Send debug message through UART
 
 
+# Timeilne
+![Timeline](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/blob/main/pictures/Timeline.png)
