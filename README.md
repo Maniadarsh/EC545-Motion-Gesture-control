@@ -21,11 +21,11 @@ The user holds the Control Arduino in her/his hand. Upon power-on, The LED matri
 
 # System Description
 
-| Current State |  input || Next State |  Output |
-|---------------|-------------||------------|---------------|
+| Current State |  input | | Next State |  Output |
+|---------------|-------------|-|------------|---------------|
 | -->IDLE          | Start Button||Game ON     | Pattern, Cursor |
-|Game ON        | Human Movement    || Continue   | New Cursor    |
-|Continue       | TimeUp     || Finising  |   Score|
+|Game ON        | Human Movement    | | Continue   | New Cursor    |
+|Continue       | TimeUp     | | Finising  |   Score|
 
 ## Subsystem 
 
