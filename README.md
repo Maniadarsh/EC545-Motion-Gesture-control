@@ -32,12 +32,12 @@ The user holds the Control Arduino in her/his hand. Upon power-on, The LED matri
 * Arduino #1
 
 |Current State | input  || Next State | Output | 
-|-------------|-------||------|-------|
+|-------------|-------|-|------|-------|
 
 * Arduino #2
 
 |Current State | input  || Next State | Output | 
-|-------------|-------||------|-------|
+|-------------|-------|-|------|-------|
 
 
 # Message Sequence between components
