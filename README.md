@@ -28,16 +28,28 @@ The user holds the Control Arduino in her/his hand. Upon power-on, The LED matri
 |Continue       | TimeUp     | | Finising  |   Score|
 
 ## Subsystem 
+Tx(.) means the transmission of RF module.  Rx(.) means the reception of RF module.
 
 * Arduino #1
 
 |Current State | input  || Next State | Output | 
 |-------------|-------|-|------|-------|
+|--> Startup |    x     ||  Startup     |   LED Blinking Slow  |
+|  Startup          |    Start Button   ||  Receiving Motion    | LED Blinking Fast     |
+|  Receiving Motion |    Human Motion   ||  Receiving Motion    | LED Blinking Fast, Tx(Encoded message)       |
+|  Receiving Motion |   Rx(Time up)    ||  Resting     | LED ON      |
+|Resting | Start Button || Startup |    LED Blinking Slow    | 
+
 
 * Arduino #2
 
 |Current State | input  || Next State | Output | 
 |-------------|-------|-|------|-------|
+|--> Startup |    x     ||  Startup     |   Startup Animation  |
+|  Startup |    Rx(S)   ||  Game Start    |   New Pattern, Cursor   |
+|Game Start | Rx(U,D,R,L)  || Game Start  |   New Cursor      |
+|Game Start | Time up || Good Game |  Score  , Tx(Time up) |
+|Good Game |    Rx(S)     ||  Game Start       |  New Pattern Cursor      |
 
 
 # Message Sequence between components
