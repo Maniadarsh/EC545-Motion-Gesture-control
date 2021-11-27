@@ -80,3 +80,11 @@ FreeRTOS is the most popular Real-time Operating System for embedded system. It 
 
 # Timeilne
 ![Timeline](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/blob/main/pictures/Timeline.png)
+# Job Assignment
+|         | Hardware | LED Matrix | RF Module | Accelerometer | FreeRTOS | Arduino #1 | Arduino #2 |
+|--       |----------|------------|-----------|---------------|----------|------------|------------|
+|Mani     |          |            |           |       X       |          |     X      |            |
+|Ruei-Yang|   X      |            |           |               |    X     |            |     X      |
+|Tianhe   |          |            |    X      |       X       |          |     X      |            |
+|Yuko     |          |     X      |           |               |    X     |            |     X      |
+
