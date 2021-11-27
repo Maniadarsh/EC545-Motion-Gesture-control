@@ -48,7 +48,7 @@ Tx(.) means the transmission of RF module.  Rx(.) means the reception of RF modu
 |--> Startup |    x     ||  Startup     |   Startup Animation  |
 |  Startup |    Rx(S)   ||  Game Start    |   New Pattern, Cursor   |
 |Game Start | Rx(U,D,R,L)  || Game Start  |   New Cursor      |
-|Game Start | Time up || Good Game |  Score  , Tx(Time up) |
+|Game Start | Back to Starting point || Good Game |  Score  , Tx(Time up) |
 |Good Game |    Rx(S)     ||  Game Start       |  New Pattern Cursor      |
 
 
