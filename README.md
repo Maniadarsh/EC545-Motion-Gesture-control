@@ -37,7 +37,7 @@ Tx(.) means the transmission of RF module.  Rx(.) means the reception of RF modu
 |--> Startup |    x     ||  Startup     |   LED Blinking Slow  |
 |  Startup          |    Start Button   ||  Receiving Motion    | LED Blinking Fast     |
 |  Receiving Motion |    Human Motion   ||  Receiving Motion    | LED Blinking Fast, Tx(Encoded message)       |
-|  Receiving Motion |   Rx(Time up)    ||  Resting     | LED ON      |
+|  Receiving Motion |   Rx(Termination)    ||  Resting     | LED ON      |
 |Resting | Start Button || Startup |    LED Blinking Slow    | 
 
 
