@@ -172,15 +172,15 @@ void loop() {
 #endif
 
   Serial.print(roll); Serial.print("\t");
-  Serial.print(gyroXangle); Serial.print("\t");
-  Serial.print(compAngleX); Serial.print("\t");
+  //Serial.print(gyroXangle); Serial.print("\t");
+  //Serial.print(compAngleX); Serial.print("\t");
   Serial.print(kalAngleX); Serial.print("\t");
 
   Serial.print("\t");
 
   Serial.print(pitch); Serial.print("\t");
-  Serial.print(gyroYangle); Serial.print("\t");
-  Serial.print(compAngleY); Serial.print("\t");
+  //Serial.print(gyroYangle); Serial.print("\t");
+  //Serial.print(compAngleY); Serial.print("\t");
   Serial.print(kalAngleY); Serial.print("\t");
 
 #if 0 // Set to 1 to print the temperature
@@ -189,7 +189,26 @@ void loop() {
   //double temperature = (double)tempRaw / 340.0 + 36.53;
   Serial.print(temperature); Serial.print("\t");
 #endif
-
+  char dir = '0';
+  int8_t threshold = 15;
+   
+  bool xp = (kalAngleX > threshold); 
+  bool xn = (kalAngleX < -threshold); 
+  bool xz = (kalAngleX < threshold) && (kalAngleX > -threshold);
+  bool yp = (kalAngleY > threshold); 
+  bool yn = (kalAngleY < -threshold); 
+  bool yz = (kalAngleY < threshold) && (kalAngleY > -threshold);
+  
+  if(xp && yz) dir = 'r';
+  if(xn && yz) dir = 'l';
+  if(xp && yp) dir = '/';
+  if(xn && yp) dir = '\\';
+  if(xp && yn) dir = '*';
+  if(xn && yn) dir = '$';
+  if(xz && yp) dir = 'u';
+  if(xz && yn) dir = 'd';
+    
+  Serial.print(dir);
   Serial.print("\r\n");
   delay(2);
 }
