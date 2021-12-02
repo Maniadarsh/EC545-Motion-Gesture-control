@@ -18,6 +18,7 @@ Kalman kalmanX; // Create the Kalman instances
 Kalman kalmanY;
 
 QueueHandle_t charQueue;
+QueueHandle_t retQueue;
 LedControl lc = LedControl(12,11,10,1);
 
 /* IMU Data */
@@ -188,6 +189,7 @@ void LED_matrix_setup(){
   charQueue = xQueueCreate(6, // Queue length
                               sizeof(char) // Queue item size
                               );
+  retQueue = xQueueCreate(1,sizeof(char)); 
 }
 void MPU_setup(){
 #if ARDUINO >= 157
@@ -240,6 +242,15 @@ void MPU_setup(){
   gyro_state = '0';
   
 }
+
+void button_IRQ(){
+   LED_state = 1;
+}
+void button_setup(){
+  const byte interruptPin = 2;
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), button_IRQ, CHANGE);
+}
 void setup() {
 
   /**
@@ -249,7 +260,7 @@ void setup() {
   Serial.begin(115200);
   LED_matrix_setup();
   MPU_setup();
-
+  button_setup();
   Wire.begin();
 
   
@@ -291,7 +302,7 @@ void loop() { }
 void TaskReadCommand(void *pvParameters)
 {
   (void) pvParameters;
-   char sensorValue = 0;
+   char sensorValue = 0,retValueQueue;
    TickType_t xLastWakeTime;
   while (!Serial) {
     vTaskDelay(1);
@@ -305,13 +316,19 @@ void TaskReadCommand(void *pvParameters)
         sensorValue = Serial.read();
         xQueueSend(charQueue, &sensorValue, portMAX_DELAY);
        // Serial.println(sensorValue);
+        if( xQueueReceive(retQueue, &retValueQueue, portMAX_DELAY) == pdPASS){
+        
+        }
       }
 
      }
      else{
         sensorValue = MPU6050_get_incline();
-        if(gyro_state == '0'){
+        if(gyro_state == '0' && sensorValue!='0'){
           xQueueSend(charQueue, &sensorValue, portMAX_DELAY);     
+            if( xQueueReceive(retQueue, &retValueQueue, portMAX_DELAY) == pdPASS){
+        
+            }
         }
 //        if(gyro_state == '?'){
 //          
@@ -319,7 +336,7 @@ void TaskReadCommand(void *pvParameters)
            
         gyro_state = sensorValue;
      }
-
+     
 //    vTaskDelayUntil( &xLastWakeTime, 333/portTICK_PERIOD_MS );
   }
 }
@@ -381,6 +398,7 @@ void TaskDisplay(void * pvParameters) {
         default:
          break;
       }
+      xQueueSend(retQueue, &valueFromQueue, portMAX_DELAY); 
     }
     else{
       lc.setLed(0, led_y, led_x,0);
