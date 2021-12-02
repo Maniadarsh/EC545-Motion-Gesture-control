@@ -1,13 +1,10 @@
-// nrf24_server
+// nrf24_client
 
 #include <SPI.h>
 #include <RH_NRF24.h>
 
 // Singleton instance of the radio driver
 RH_NRF24 nrf24;
-// RH_NRF24 nrf24(8, 7); // use this to be electrically compatible with Mirf
-// RH_NRF24 nrf24(8, 10);// For Leonardo, need explicit SS pin
-// RH_NRF24 nrf24(8, 7); // For RFM73 on Anarduino Mini
 
 void setup() 
 {
@@ -23,28 +20,35 @@ void setup()
     Serial.println("setRF failed");    
 }
 
+
 void loop()
 {
-  if (nrf24.available())
-  {
-    // Should be a message for us now   
-    uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
+  Serial.println("Sending to nrf24_server");
+  // Send a message to nrf24_server
+  uint8_t data[] = "Hello World2!";
+  nrf24.send(data, sizeof(data));
+  
+  nrf24.waitPacketSent();
+  // Now wait for a reply
+  uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+
+  if (nrf24.waitAvailableTimeout(500))
+  { 
+    // Should be a reply message for us now   
     if (nrf24.recv(buf, &len))
     {
-//      NRF24::printBuffer("request: ", buf, len);
-      Serial.print("got request: ");
+      Serial.print("got reply: ");
       Serial.println((char*)buf);
-      
-      // Send a reply
-      uint8_t data[] = "And hello back to you";
-      nrf24.send(data, sizeof(data));
-      nrf24.waitPacketSent();
-      Serial.println("Sent a reply");
     }
     else
     {
       Serial.println("recv failed");
     }
   }
+  else
+  {
+    Serial.println("No reply, is nrf24_server running?");
+  }
+  delay(50);
 }

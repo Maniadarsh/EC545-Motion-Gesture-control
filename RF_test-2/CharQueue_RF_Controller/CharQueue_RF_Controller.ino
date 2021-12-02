@@ -1,343 +1,141 @@
+/*
+ * Example of a basic FreeRTOS queue
+ * https://www.freertos.org/Embedded-RTOS-Queues.html
+ */
+
 // Include Arduino FreeRTOS library
 #include <Arduino_FreeRTOS.h>
 
 // Include queue support
 #include <queue.h>
+#include <SPI.h>
+#include <RH_NRF24.h>
+/* 
+ * Declaring a global variable of type QueueHandle_t 
+ * 
+ */
+QueueHandle_t integerQueue;
+RH_NRF24 nrf24;
 
-// Include LedControl library to control the LED matrix
-#include <LedControl.h>
-
-#define DISPLAY_DELAY 10
-#define NEW_DISPLAY_ANIMATION_SPEED 50
-#define AFTER_SPRITE_DELAY 1500
-
-QueueHandle_t charQueue;
-LedControl lc = LedControl(7,6,5,1);
-
-void newDisplay();
-void errorDisplay();
-void stopDisplay();
-void updateDisplay(int delta_x, int delta_y);
-void squarePattern();
-void patternMatching(int num_expected_input);
-
-int led_x = 0;
-int led_y = 0;
-int pos[8][8] = {0}; 
-int pattern1[8][8] = {0};
-
-byte cross[] = {
-B10000001,
-B01000010,
-B00100100,
-B00011000,
-B00011000,
-B00100100,
-B01000010,
-B10000001
-};
- 
-byte circle[] = {
-B00111100,
-B01000010,
-B10000001,
-B10000001,
-B10000001,
-B10000001,
-B01000010,
-B00111100
-};
-
-TaskHandle_t xHandle = NULL;
+void RF_setup() 
+{
+  Serial.begin(9600);
+  if (!nrf24.init())
+    Serial.println("init failed");
+  // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
+  if (!nrf24.setChannel(1))
+    Serial.println("setChannel failed");
+  if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm))
+    Serial.println("setRF failed");    
+}
 
 void setup() {
-  lc.shutdown(0,false);
-  lc.setIntensity(0, 8);
-  lc.clearDisplay(0);
 
   /**
    * Create a queue.
    * https://www.freertos.org/a00116.html
    */
-  charQueue = xQueueCreate(10, // Queue length
-                              sizeof(char) // Queue item size
+  integerQueue = xQueueCreate(10, // Queue length
+                              sizeof(uint8_t) // Queue item size
                               );
-  
-  if (charQueue != NULL) {
+  RF_setup();
+
+  if (integerQueue != NULL) {
     
     // Create task that consumes the queue if it was created.
-    xTaskCreate(TaskDisplay, // Task function
-                "Display", // A name just for humans
-                128,  // This stack size can be checked & adjusted by reading the Stack Highwater
+    xTaskCreate(TaskSerial, // Task function
+                "Serial", // A name just for humans
+                256,  // This stack size can be checked & adjusted by reading the Stack Highwater
                 NULL, 
-                2, // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+                1, // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
                 NULL);
 
 
     // Create task that publish data in the queue if it was created.
-    xTaskCreate(TaskReadCommand, // Task function
-                "ReadCommand", // Task name
+    xTaskCreate(TaskAnalogRead, // Task function
+                "AnalogRead", // Task name
                 128,  // Stack size
                 NULL, 
-                2, // Priority
+                1, // Priority
                 NULL);
-
-    xTaskCreate(TaskBlink, // Task function
-              "Blink", // Task name
-              128, // Stack size 
-              NULL, 
-              0, // Priority
-              &xHandle);
-
+    
   }
-              
-  Serial.begin(9600);
+
 
 }
 
 void loop() {}
 
-void TaskReadCommand(void *pvParameters)
+
+/**
+ * Analog read task
+ * Reads an analog input on pin 0 and send the readed value through the queue.
+ * See Blink_AnalogRead example.
+ */
+void TaskAnalogRead(void *pvParameters)
 {
   (void) pvParameters;
-  while (!Serial) {
-    vTaskDelay(1);
-  }
+  
   for (;;)
   {
-     char sensorValue = 0;
-     if (Serial.available()){
-        sensorValue = Serial.read();
-        xQueueSend(charQueue, &sensorValue, portMAX_DELAY);
-     }
-     vTaskDelay(1);
+    // Read the input on analog pin 0:
+    uint8_t sensorValue = 'd';
+
+    /**
+     * Post an item on a queue.
+     * https://www.freertos.org/a00117.html
+     */
+    xQueueSend(integerQueue, &sensorValue, portMAX_DELAY);
+
+    // One tick delay (15ms) in between reads for stability
+    vTaskDelay(100);
   }
 }
 
-void TaskDisplay(void * pvParameters) {
+/**
+ * Serial task.
+ * Prints the received items from the queue to the serial monitor.
+ */
+void TaskSerial(void * pvParameters) {
   (void) pvParameters;
 
-  // Wait for serial port to connect. Needed for native USB, on LEONARDO, MICRO, YUN, and other 32u4 based boards.
-  while (!Serial) {
-    vTaskDelay(1);
-  }
-
-  char valueFromQueue;
+  uint8_t valueFromQueue = 0;
 
   for (;;) 
   {
+ 
     /**
      * Read an item from a queue.
      * https://www.freertos.org/a00118.html
      */
-    if (xQueueReceive(charQueue, &valueFromQueue, portMAX_DELAY) == pdPASS) {
-      Serial.print(valueFromQueue);
-      switch(valueFromQueue) {
-        case 'n':
-          newDisplay();
-          // squarePattern();
-          setInitPosition();
-          break;
-        case 'e':
-          errorDisplay();
-          break;
-        case 's':
-          stopDisplay();
-          break;
-        case 'u': 
-          updateDisplay(-1, 0);
-          break;
-        case 'd':
-          updateDisplay(1, 0);
-          break;
-        case 'r':
-          updateDisplay(0, -1);
-          break;
-        case 'l':
-          updateDisplay(0, 1);
-          break;
-        case 'm':
-          patternMatching(28);
-          break;
-      }
-    }
-  }
-}
-
-void squarePattern(){
-  Serial.print("\nLet's Draw Square!");
-  int count = 0;
-  int score = 0;
-  for (int i = 0; i < 8; i++){
-    for (int j = 0; j < 8; j++){
-      if (i == 0 || i == 7){
-        pattern1[i][j] = 1;
-        lc.setLed(0, i, j, 1);
-      }
-      else if (j == 0 || j == 7){
-        pattern1[i][j] = 1;
-        lc.setLed(0, i, j, 1);
-      }
-    }
-  }
-  delay(AFTER_SPRITE_DELAY);
-  lc.clearDisplay(0);
-}
-
-/*
-void trianglePattern(){
-  Serial.print("\nHere Comes...Triangle!");
-  int count = 0;
-  int score = 0;
-  for (int i = 0; i < 8; i++){
-    for (int j = 0; j < 8; j++){
-      if ((i == j) || (i == j + 1)){
-        pattern1[i][j] = 1;
-        lc.setLed(0, i, j, 1);
-        }
-      if (i == 0){
-        pattern1[i][j] = 1;
-        lc.setLed(0, i, j, 1);
-      }
-      if (j == 7){
-        pattern1[i][j] = 1;
-        lc.setLed(0, i, j, 1);
-      }
-    }
-  }
-  delay(AFTER_SPRITE_DELAY);
-  lc.clearDisplay(0);
-}*/
-
-// Function to compute the score of how good the player matches a pattern
-// The following is the method of calculation basically using euclidean distance method 
-// score = {1 - abs(# of expected inputs - # of inputs)/(# of expected inputs)} * {1 - (expected value in the pattern vector - value in the position vector))/# of array} * 100
-void patternMatching(int num_expected_inputs){
-  float num_diff = 0;
-  float score = 0;
-  float num_input = 0;
-
-  for (int i = 0; i < 8; i++){
-    for (int j = 0; j < 8; j++){
-      if (pattern1[i][j] != pos[i][j]){
-        num_diff++;
-      }
-      if (pos[i][j] == 1){
-        num_input++;
-      }
-    }
-  }
-
-  score = (1 - abs(num_expected_inputs - num_input)/num_expected_inputs)*((64 - num_diff)/64)*100;
+    Serial.println("Sending to nrf24_server");
+    // Send a message to nrf24_server
+    nrf24.send(valueFromQueue, sizeof(valueFromQueue));
+    
+    nrf24.waitPacketSent();
+    // Now wait for a reply
+    uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(buf);
   
-  if (num_diff == 0){
-    Serial.println("\nSuccess! Good Job!");
-    setSprite(circle);
-  }
-  else {
-    char buffer[30];
-    int matching_score = score;
-    sprintf(buffer, "\nFail! The Matching Score Is %d", matching_score);
-    Serial.println(buffer);
-    delete[] buffer;
-    setSprite(cross);
-  }
-  delay(AFTER_SPRITE_DELAY);
-  lc.clearDisplay(0);
-  memset(pos, 0, sizeof(pos));
-  setInitPosition();
-}
-
-void setSprite(byte *sprite){
-    for(int r = 0; r < 8; r++){
-        lc.setRow(0, r, sprite[r]);
+    if (nrf24.waitAvailableTimeout(500))
+    { 
+      // Should be a reply message for us now   
+      if (nrf24.recv(buf, &len))
+      {
+        Serial.print("got reply: ");
+        Serial.println((char*)buf);
+      }
+      else
+      {
+        Serial.println("recv failed");
+      }
     }
-}
-
-void updateDisplay(int delta_x, int delta_y){
-  lc.setLed(0, led_y, led_x,1);
-  if ((led_x + delta_x <= 7 && led_x + delta_x >= 0) && (led_y + delta_y <= 7 && led_y + delta_y >= 0)){ 
-    led_y += delta_y;
-    led_x += delta_x;
-  }
-  else if ((led_x + delta_x > 7 || led_x + delta_x < 0) && (led_y + delta_y <= 7 && led_y + delta_y >= 0)){
-    led_y += delta_y;
-  }
-  else if ((led_x + delta_x <= 7 && led_x + delta_x >= 0) && (led_y + delta_y > 7 || led_y + delta_y < 0)){
-    led_x += delta_x;
-  }
-  lc.setLed(0, led_y, led_x,1);
-  pos[led_y][led_x] = 1;
-  if (led_x == 0 && led_y == 0){
-    patternMatching(28);
-  }
-}
-
-void setInitPosition(){
-   lc.setLed(0, 0, 0, 1);
-   led_y = 0; 
-   led_x = 0;
-}
- 
-void newDisplay() {
-    lc.clearDisplay(0);
-    Serial.print("\nNew Game Is Started!");   
-    for(int r = 0; r < 8; r++){
-        for(int c = 0; c < 8; c++){
-            lc.setLed(0, r, c, HIGH);
-            delay(NEW_DISPLAY_ANIMATION_SPEED);
-        }
+    else
+    {
+      Serial.println("No reply, is nrf24_server running?");
     }
-    lc.clearDisplay(0);
-    memset(pos, 0, sizeof(pos));
-    vTaskResume( xHandle );
-
-    int pattern = rand() % 3 + 1;
-    switch(pattern){
-      case 1:
-        squarePattern();
-        break;
-      case 2:
-        squarePattern();
-        break;
-      case 3: 
-        squarePattern();
-        break;
+    if (xQueueReceive(integerQueue, &valueFromQueue, portMAX_DELAY) == pdPASS) {
+      Serial.println(char(valueFromQueue));
     }
-}
-
-void errorDisplay() {
-    lc.clearDisplay(0);
-    Serial.print("\nSome Error is Occurred!");
-    setSprite(cross);
-    delay(AFTER_SPRITE_DELAY);
-    lc.clearDisplay(0);
-    lc.setLed(0, led_y, led_x, 1);
-}
- 
-void stopDisplay() {
-    lc.clearDisplay(0);
-    Serial.print("\nGame is terminated!");
-    for(int r = 0; r < 8; r++){
-        for(int c = 0; c < 8; c++){
-            lc.setLed(0, r, c, HIGH);
-            delay(NEW_DISPLAY_ANIMATION_SPEED);
-        }
-    }
-    lc.clearDisplay(0);
-    vTaskSuspend(xHandle);
-}
-
-/* On Board Blink */
-void TaskBlink(void *pvParameters)
-{
-  (void) pvParameters;
-
-  for (;;)
-  {
-    lc.setLed(0, led_y, led_x,0);
-    vTaskDelay( 200 / portTICK_PERIOD_MS );
-    lc.setLed(0, led_y, led_x,1);
-    vTaskDelay( 200 / portTICK_PERIOD_MS );
   }
 }
