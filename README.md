@@ -88,3 +88,10 @@ FreeRTOS is the most popular Real-time Operating System for embedded system. It 
 |Tianhe   |          |            |    X      |       X       |          |     X      |            |
 |Yuko     |          |     X      |           |               |    X     |            |     X      |
 
+
+# TODO 12/2
+* Gyro Angle input region 
+* Diagonal movement
+* State machine
+* Button behavior
+* RF Module
