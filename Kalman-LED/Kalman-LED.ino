@@ -31,7 +31,7 @@ double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
 
 uint32_t timer;
 uint8_t i2cData[14]; // Buffer for I2C data
-
+char gyro_state;
 // TODO: Make calibration routine
 
 /* I2C setup */
@@ -54,18 +54,15 @@ char MPU6050_get_incline(){
   // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
   // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
   // It is then converted from radians to degrees
-#ifdef RESTRICT_PITCH // Eq. 25 and 26
+
   double roll  = atan2(accY, accZ) * RAD_TO_DEG;
   double pitch = atan(-accX / sqrt(accY * accY + accZ * accZ)) * RAD_TO_DEG;
-#else // Eq. 28 and 29
-  double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
-  double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
-#endif
+
 
   double gyroXrate = gyroX / 131.0; // Convert to deg/s
   double gyroYrate = gyroY / 131.0; // Convert to deg/s
 
-#ifdef RESTRICT_PITCH
+
   // This fixes the transition problem when the accelerometer angle jumps between -180 and 180 degrees
   if ((roll < -90 && kalAngleX > 90) || (roll > 90 && kalAngleX < -90)) {
     kalmanX.setAngle(roll);
@@ -78,20 +75,7 @@ char MPU6050_get_incline(){
   if (abs(kalAngleX) > 90)
     gyroYrate = -gyroYrate; // Invert rate, so it fits the restriced accelerometer reading
   kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
-#else
-  // This fixes the transition problem when the accelerometer angle jumps between -180 and 180 degrees
-  if ((pitch < -90 && kalAngleY > 90) || (pitch > 90 && kalAngleY < -90)) {
-    kalmanY.setAngle(pitch);
-    compAngleY = pitch;
-    kalAngleY = pitch;
-    gyroYangle = pitch;
-  } else
-    kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt); // Calculate the angle using a Kalman filter
 
-  if (abs(kalAngleY) > 90)
-    gyroXrate = -gyroXrate; // Invert rate, so it fits the restriced accelerometer reading
-  kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt); // Calculate the angle using a Kalman filter
-#endif
 
   gyroXangle += gyroXrate * dt; // Calculate gyro angle without any filter
   gyroYangle += gyroYrate * dt;
@@ -108,18 +92,7 @@ char MPU6050_get_incline(){
     gyroYangle = kalAngleY;
 
   /* Print Data */
-#if 0 // Set to 1 to activate
-  Serial.print(accX); Serial.print("\t");
-  Serial.print(accY); Serial.print("\t");
-  Serial.print(accZ); Serial.print("\t");
-
-  Serial.print(gyroX); Serial.print("\t");
-  Serial.print(gyroY); Serial.print("\t");
-  Serial.print(gyroZ); Serial.print("\t");
-
-  Serial.print("\t");
-#endif
-
+#if 0
   Serial.print(roll); Serial.print("\t");
   //Serial.print(gyroXangle); Serial.print("\t");
   //Serial.print(compAngleX); Serial.print("\t");
@@ -131,20 +104,16 @@ char MPU6050_get_incline(){
   //Serial.print(gyroYangle); Serial.print("\t");
   //Serial.print(compAngleY); Serial.print("\t");
   Serial.print(kalAngleY); Serial.print("\t");
-
-#if 0 // Set to 1 to print the temperature
-  Serial.print("\t");
-
-  //double temperature = (double)tempRaw / 340.0 + 36.53;
-  Serial.print(temperature); Serial.print("\t");
-#endif
-   char direct;
+#endif 
+#if 0
+  char direct;
   direct = directions(kalAngleX,kalAngleY);
   
     
   Serial.print(direct);
   Serial.print("\r\n");
-  
+#endif
+  return directions(kalAngleX,kalAngleY);
 }
 
 
@@ -268,7 +237,7 @@ void MPU_setup(){
 
   timer = micros();
 
-
+  gyro_state = '0';
   
 }
 void setup() {
@@ -302,14 +271,14 @@ void setup() {
                 NULL, 
                 2, // Priority
                 NULL);
-
+#if 0
     xTaskCreate(TaskBlink, // Task function
               "Bnk", // Task name
-              128, // Stack size 
+              32, // Stack size 
               NULL, 
               0, // Priority
               &xHandle);
-
+#endif
   }
              
   
@@ -335,14 +304,22 @@ void TaskReadCommand(void *pvParameters)
       if (Serial.available()){
         sensorValue = Serial.read();
         xQueueSend(charQueue, &sensorValue, portMAX_DELAY);
+       // Serial.println(sensorValue);
       }
 
      }
      else{
         sensorValue = MPU6050_get_incline();
-        xQueueSend(charQueue, &sensorValue, portMAX_DELAY);     
+        if(gyro_state == '0'){
+          xQueueSend(charQueue, &sensorValue, portMAX_DELAY);     
+        }
+//        if(gyro_state == '?'){
+//          
+//        }
+           
+        gyro_state = sensorValue;
      }
-     Serial.println(sensorValue);
+
 //    vTaskDelayUntil( &xLastWakeTime, 333/portTICK_PERIOD_MS );
   }
 }
@@ -363,11 +340,11 @@ void TaskDisplay(void * pvParameters) {
      * Read an item from a queue.
      * https://www.freertos.org/a00118.html
      */
-    if (xQueueReceive(charQueue, &valueFromQueue, portMAX_DELAY) == pdPASS) {
-      Serial.print(valueFromQueue);
+    if (xQueueReceive(charQueue, &valueFromQueue, 5) == pdPASS) {
+     // Serial.print(valueFromQueue);
       switch(valueFromQueue) {
         case 'n':
-          newDisplay();
+          newDisplay();directions(kalAngleX,kalAngleY);
           // squarePattern();
           xQueueReset(charQueue);
           setInitPosition();
@@ -405,6 +382,13 @@ void TaskDisplay(void * pvParameters) {
          break;
       }
     }
+    else{
+      lc.setLed(0, led_y, led_x,0);
+      vTaskDelay( 200 / portTICK_PERIOD_MS );
+      lc.setLed(0, led_y, led_x,1);
+      vTaskDelay( 200 / portTICK_PERIOD_MS );
+    }
+
   }
 }
 
@@ -572,11 +556,10 @@ void stopDisplay() {
     vTaskSuspend(xHandle);
 }
 
+#if 1
 /* On Board Blink */
 void TaskBlink(void *pvParameters)
 {
-  (void) pvParameters;
-
   for (;;)
   {
 
@@ -586,3 +569,5 @@ void TaskBlink(void *pvParameters)
     vTaskDelay( 200 / portTICK_PERIOD_MS );
   }
 }
+
+#endif
