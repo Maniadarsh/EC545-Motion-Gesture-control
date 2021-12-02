@@ -37,6 +37,27 @@ uint8_t i2cData[14]; // Buffer for I2C data
 
 // TODO: Make calibration routine
 
+char directions(double kalAngleX,double kalAngleY){
+  char dir = '0';
+  int8_t threshold = 15;
+  bool xp = (kalAngleX > threshold); 
+  bool xn = (kalAngleX < -threshold); 
+  bool xz = (kalAngleX < threshold) && (kalAngleX > -threshold);
+  bool yp = (kalAngleY > threshold); 
+  bool yn = (kalAngleY < -threshold); 
+  bool yz = (kalAngleY < threshold) && (kalAngleY > -threshold);
+  if(xp && yz) dir = 'r';
+  if(xn && yz) dir = 'l';
+  if(xp && yp) dir = '/';
+  if(xn && yp) dir = '\\';
+  if(xp && yn) dir = '*';
+  if(xn && yn) dir = '$';
+  if(xz && yp) dir = 'u';
+  if(xz && yn) dir = 'd';
+  return dir;
+}
+
+
 void setup() {
   Serial.begin(115200);
   Wire.begin();
@@ -86,6 +107,7 @@ void setup() {
   compAngleY = pitch;
 
   timer = micros();
+ 
 }
 
 void loop() {
@@ -189,26 +211,11 @@ void loop() {
   //double temperature = (double)tempRaw / 340.0 + 36.53;
   Serial.print(temperature); Serial.print("\t");
 #endif
-  char dir = '0';
-  int8_t threshold = 15;
-   
-  bool xp = (kalAngleX > threshold); 
-  bool xn = (kalAngleX < -threshold); 
-  bool xz = (kalAngleX < threshold) && (kalAngleX > -threshold);
-  bool yp = (kalAngleY > threshold); 
-  bool yn = (kalAngleY < -threshold); 
-  bool yz = (kalAngleY < threshold) && (kalAngleY > -threshold);
+   char direct;
+  direct = directions(kalAngleX,kalAngleY);
   
-  if(xp && yz) dir = 'r';
-  if(xn && yz) dir = 'l';
-  if(xp && yp) dir = '/';
-  if(xn && yp) dir = '\\';
-  if(xp && yn) dir = '*';
-  if(xn && yn) dir = '$';
-  if(xz && yp) dir = 'u';
-  if(xz && yn) dir = 'd';
     
-  Serial.print(dir);
+  Serial.print(direct);
   Serial.print("\r\n");
   delay(2);
 }
