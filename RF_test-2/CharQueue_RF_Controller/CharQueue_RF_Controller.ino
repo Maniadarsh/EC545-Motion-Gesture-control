@@ -14,7 +14,7 @@
  * Declaring a global variable of type QueueHandle_t 
  * 
  */
-QueueHandle_t integerQueue;
+QueueHandle_t charQueue;
 RH_NRF24 nrf24;
 
 void RF_setup() 
@@ -35,12 +35,12 @@ void setup() {
    * Create a queue.
    * https://www.freertos.org/a00116.html
    */
-  integerQueue = xQueueCreate(10, // Queue length
+  charQueue = xQueueCreate(10, // Queue length
                               sizeof(uint8_t) // Queue item size
                               );
   RF_setup();
 
-  if (integerQueue != NULL) {
+  if (charQueue != NULL) {
     
     // Create task that consumes the queue if it was created.
     xTaskCreate(TaskSerial, // Task function
@@ -79,16 +79,13 @@ void TaskAnalogRead(void *pvParameters)
   for (;;)
   {
     // Read the input on analog pin 0:
-    uint8_t sensorValue = 'd';
-
-    /**
-     * Post an item on a queue.
-     * https://www.freertos.org/a00117.html
-     */
-    xQueueSend(integerQueue, &sensorValue, portMAX_DELAY);
-
-    // One tick delay (15ms) in between reads for stability
-    vTaskDelay(100);
+    char sensorValue = 's';
+     /*if (Serial.available()){
+        sensorValue = Serial.read();
+        xQueueSend(charQueue, &sensorValue, portMAX_DELAY);
+     }*/
+     xQueueSend(charQueue, &sensorValue, portMAX_DELAY);
+     vTaskDelay(1);
   }
 }
 
@@ -99,7 +96,7 @@ void TaskAnalogRead(void *pvParameters)
 void TaskSerial(void * pvParameters) {
   (void) pvParameters;
 
-  uint8_t valueFromQueue = 0;
+  char valueFromQueue = 0;
 
   for (;;) 
   {
@@ -108,7 +105,10 @@ void TaskSerial(void * pvParameters) {
      * Read an item from a queue.
      * https://www.freertos.org/a00118.html
      */
-    Serial.println("Sending to nrf24_server");
+
+     if (xQueueReceive(charQueue, &valueFromQueue, portMAX_DELAY) == pdPASS) {
+      Serial.println(char(valueFromQueue));
+      Serial.println("Sending to nrf24_server");
     // Send a message to nrf24_server
     nrf24.send(valueFromQueue, sizeof(valueFromQueue));
     
@@ -134,8 +134,8 @@ void TaskSerial(void * pvParameters) {
     {
       Serial.println("No reply, is nrf24_server running?");
     }
-    if (xQueueReceive(integerQueue, &valueFromQueue, portMAX_DELAY) == pdPASS) {
-      Serial.println(char(valueFromQueue));
     }
+    
+    
   }
 }
