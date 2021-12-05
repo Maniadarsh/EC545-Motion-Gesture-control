@@ -99,3 +99,10 @@ FreeRTOS is the most popular Real-time Operating System for embedded system. It 
 * RF Module
 * [Report](https://docs.google.com/document/d/1jMlAB727B3SJ2UlOs0SjzSUeTkuZW6ylENpsGi7Oyuk/edit)
 
+# TODO 12/5
+* Combinae Everything
+* Everyone draw part of the State machine/ describe the behavior in LTL
+* Record a demo video
+* Frozen Hardware/Software
+* Packaging
+* Final Presentation Slide 
