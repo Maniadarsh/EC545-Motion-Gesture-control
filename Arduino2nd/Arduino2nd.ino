@@ -1,9 +1,8 @@
 // Include Arduino FreeRTOS library
 #include <Arduino_FreeRTOS.h>
-// Include queue support
 #include <queue.h>
-// Include LedControl library to control the LED matrix
 #include <LedControl.h>
+
 // rf
 #include <SPI.h>
 #include <RH_NRF24.h>
@@ -64,7 +63,7 @@ void LED_matrix_setup(){
   lc.clearDisplay(0);
   LED_state = 0;
 
-  charQueue = xQueueCreate(6, // Queue length
+  charQueue = xQueueCreate(3, // Queue length
                               sizeof(char) // Queue item size
                               );
   retQueue = xQueueCreate(1,sizeof(char)); 
@@ -73,21 +72,23 @@ void LED_matrix_setup(){
 
 void RF_setup(){
 
-  if (!nrf24.init())
-    Serial.println("init failed");
-  // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
-  if (!nrf24.setChannel(1))
-    Serial.println("setChannel failed");
-  if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm))
-    Serial.println("setRF failed");
-  Serial.println("init end");
+  if (!nrf24.init()){
+    Serial.println("rfInitFail");
+  }
+  if (!nrf24.setChannel(1)){
+    Serial.println("setChnlFail");
+  }
+  if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm)){
+    Serial.println("setRfFailed");    
+  }
+  Serial.println("initEnd");
 
 }
 
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   LED_matrix_setup();
   RF_setup();
   
@@ -124,50 +125,47 @@ void loop() {}
  
 void TaskReadCommand(void *pvParameters)
 {
+
+    uint8_t sensorValue = 0;
+    uint8_t valueFromQueue;
+    uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN] = {0};
+    uint8_t len = sizeof(buf);
   (void) pvParameters;
   for (;;)
   {
 
-    // Read the input on analog pin 0:
-    char sensorValue = 0;
+    sensorValue = 0;
 
     if (nrf24.available())
     {
-      // Should be a message for us now   
-      uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
-      uint8_t len = sizeof(buf);
       if (nrf24.recv(buf, &len))
       {
-        Serial.print("got : ");
+        Serial.print("Rx:");
         Serial.println((char*)buf);
-        sensorValue = ((char*)buf)[0];
-        // Send a reply
-        //uint8_t data[] = "Y";
-        nrf24.send(buf, sizeof(buf));
-        nrf24.waitPacketSent();
-        Serial.println("Sent a reply");
+        sensorValue = buf[0];
+
       }
       else
       {
         sensorValue = 'N';
-        Serial.println("recv failed");
+        Serial.println("RN");//recv failed
       }
     }
     if(sensorValue!=0){
       xQueueSend(charQueue, &sensorValue, portMAX_DELAY);
+      Serial.println("TQQ");
+      if(xQueueReceive(retQueue, &valueFromQueue, portMAX_DELAY) == pdPASS){
+        //Serial.println("RP");//Sent a reply
+        nrf24.send(buf, sizeof(buf));
+        nrf24.waitPacketSent();
+      }
     }
-
 
   }
 }
 
 void TaskDisplay(void * pvParameters) {
   (void) pvParameters;
-
-  // Wait for serial port to connect. Needed for native USB, on LEONARDO, MICRO, YUN, and other 32u4 based boards.
-  while (!Serial) {
-    vTaskDelay(1);
-  }
 
   char valueFromQueue;
 
@@ -178,7 +176,11 @@ void TaskDisplay(void * pvParameters) {
      * Read an item from a queue.
      * https://www.freertos.org/a00118.html
      */
-    if (xQueueReceive(charQueue, &valueFromQueue, 5) == pdPASS) {
+    if (LED_state == 0){  
+        LED_state = 1;//??
+     } 
+    else if (xQueueReceive(charQueue, &valueFromQueue, 5) == pdPASS) {
+      Serial.print("Q:");
       Serial.print(valueFromQueue);
       if (LED_state == 1){  
         newGame();
@@ -214,13 +216,13 @@ void TaskDisplay(void * pvParameters) {
           default:
             break;
         }
-     }
-     if (!first){
-      if (led_y == init_posY && led_x == init_posX){
-        patternMatching(num_expected_inputs);
-        LED_state = '1';
       }
-     }
+      if (!first){
+        if (led_y == init_posY && led_x == init_posX){
+          patternMatching(num_expected_inputs);
+          LED_state = 1;//'1'
+        }
+      }
 
       xQueueSend(retQueue, &valueFromQueue, portMAX_DELAY); 
     }
@@ -413,14 +415,14 @@ void newGame() {
         num_expected_inputs = 28;
         break;
       case 2: 
-        squarePattern();
-        //trianglePattern();
+        //squarePattern();
+        trianglePattern();
         setInitPosition(7,7);
         num_expected_inputs = 21;
         break;
       case 3:
-        squarePattern();
-        //heartPattern();
+        //squarePattern();
+        heartPattern();
         setInitPosition(4,7);
         num_expected_inputs = 18;
         break;

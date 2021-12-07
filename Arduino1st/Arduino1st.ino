@@ -214,21 +214,19 @@ void button_setup(){
 
 
 void setup() {
-   BaseType_t _ret;
+   BaseType_t _ret = 1;
   /**
    * Create a queue.
    * https://www.freertos.org/a00116.html
    */
-  Serial.begin(9600);  
-  charQueue = xQueueCreate(3, // Queue length
-                              sizeof(uint8_t) // Queue item size
-                              );
-  retQueue = xQueueCreate(1,sizeof(uint8_t));   
+  Serial.begin(115200);  
+  charQueue = xQueueCreate(2, sizeof(uint8_t));
+  retQueue  = xQueueCreate(1, sizeof(uint8_t));   
+  Wire.begin();
 
   RF_setup();
   MPU_setup();
   button_setup();
-  Wire.begin();
 
 
   if (charQueue != NULL) {
@@ -236,7 +234,7 @@ void setup() {
     // Create task that consumes the queue if it was created.
     _ret = xTaskCreate(TaskSerial, // Task function
                 "Ser", // A name just for humans
-                384,  // This stack size can be checked & adjusted by reading the Stack Highwater
+                300,  // This stack size can be checked & adjusted by reading the Stack Highwater
                 NULL, 
                 2, // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
                 NULL);
@@ -246,7 +244,7 @@ void setup() {
     // Create task that publish data in the queue if it was created.
       _ret = xTaskCreate(TaskReadCommand, // Task function
                 "RdCmd", // Task name
-                256,  // Stack size
+                128,  // Stack size
                 NULL, 
                 2, // Priority
                 NULL);    
@@ -258,7 +256,7 @@ void setup() {
   }
 
 
-  Serial.println("a");
+  Serial.println("i");
 }
 
 void loop() {}
@@ -273,12 +271,9 @@ void TaskReadCommand(void *pvParameters)
 
   for (;;)
   {
-#if 1
-    
-      Serial.print("i\n");
      if(LED_state == 0){
  #if 1
-       Serial.print("L0");
+     //  Serial.print("L0");
       if (Serial.available()){
         sensorValue = Serial.read();
         xQueueSend(charQueue, &sensorValue, portMAX_DELAY);
@@ -290,7 +285,7 @@ void TaskReadCommand(void *pvParameters)
 #endif
      }
      else{
-       Serial.print("L1");
+//       Serial.print("L1");
 #if 1
         sensorValue = MPU6050_get_incline();
         if(gyro_state == '0' && sensorValue!='0'){
@@ -303,7 +298,6 @@ void TaskReadCommand(void *pvParameters)
         gyro_state = sensorValue;
 #endif
      }
-#endif     
   }
 }
 
@@ -320,43 +314,36 @@ void TaskSerial(void * pvParameters) {
 
 
   uint8_t valueFromQueue = 0;
+  uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN] = {0};
+  uint8_t len = sizeof(buf);
 
   for (;;) 
   {
    Serial.println("R");
-   delay(50);
-#if 0
-    /**
-     * Read an item from a queue.
-     * https://www.freertos.org/a00118.html
-     */
-
+#if 1
      if (xQueueReceive(charQueue, &valueFromQueue, portMAX_DELAY) == pdPASS) {
 //        Serial.println(char(valueFromQueue));
-        Serial.println("Tx");
+        Serial.println("Tx"); //Sending to nrf24_server
         
         nrf24.send(&valueFromQueue, sizeof(valueFromQueue));
         nrf24.waitPacketSent();
-        // Now wait for a reply
-        uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
-        uint8_t len = sizeof(buf);
-      
+        // Now wait for a reply      
         if (nrf24.waitAvailableTimeout(500))
         { 
             // Should be a reply message for us now   
             if (nrf24.recv(buf, &len))
             {
-              Serial.print("Rx:");
+              Serial.print("Rx:");//got reply: 
               Serial.println((char*)buf);
             }
             else
             {
-              Serial.println("R5");
+              Serial.println("R5"); //recv failed
             }
         }
         else
         {
-            Serial.println("R6");
+            Serial.println("R6");//No reply, is nrf24_server running?"
         }
         xQueueSend(retQueue, &valueFromQueue, portMAX_DELAY); 
 
