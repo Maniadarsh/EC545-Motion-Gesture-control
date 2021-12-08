@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+chan syncu, syncd, syncl, syncr, syncudr, syncudl, syncddl, syncddr, back;
+bool front = false;
+bool dow = false;
+bool le = false;
+bool ri = false;
+bool udl = false;
+bool udr = false;
+bool ddl = false;
+bool ddr = false;
+bool initial = true;
+clock track;</declaration>
+	<template>
+		<name x="5" y="5">LED</name>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id0" x="-170" y="-170">
+			<name x="-180" y="-204">upper_left</name>
+		</location>
+		<location id="id1" x="0" y="0">
+			<name x="-10" y="-34">neutral</name>
+		</location>
+		<location id="id2" x="-255" y="-8">
+			<name x="-298" y="-25">left</name>
+		</location>
+		<location id="id3" x="-195" y="127">
+			<name x="-229" y="127">down_left</name>
+		</location>
+		<location id="id4" x="8" y="170">
+			<name x="0" y="187">down</name>
+		</location>
+		<location id="id5" x="195" y="127">
+			<name x="204" y="136">down_right</name>
+		</location>
+		<location id="id6" x="297" y="0">
+			<name x="322" y="-17">right</name>
+		</location>
+		<location id="id7" x="220" y="-170">
+			<name x="210" y="-204">upper_right</name>
+		</location>
+		<location id="id8" x="25" y="-204">
+			<name x="15" y="-238">up</name>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-144" y="-59">track&gt;1</label>
+			<label kind="synchronisation" x="-101" y="-46">back?</label>
+			<nail x="-144" y="-85"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-152" y="-119">udl == true</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-237" y="-50">track&gt;1</label>
+			<label kind="synchronisation" x="-237" y="-33">back?</label>
+			<nail x="-110" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-237" y="-38">le == true</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-212" y="34">track&gt;1</label>
+			<label kind="synchronisation" x="-177" y="50">back?</label>
+			<nail x="-144" y="17"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-136" y="76">ddl == true</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-68" y="127">track&gt;1</label>
+			<label kind="synchronisation" x="-17" y="114">back?</label>
+			<nail x="-42" y="93"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id4"/>
+			<label kind="guard" x="8" y="102">dow == true</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id1"/>
+			<label kind="guard" x="51" y="76">track&gt;1</label>
+			<label kind="synchronisation" x="77" y="80">back?</label>
+			<nail x="59" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id5"/>
+			<label kind="guard" x="110" y="51">ddr == true</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id1"/>
+			<label kind="guard" x="195" y="25">track&gt;1</label>
+			<label kind="synchronisation" x="221" y="34">back?</label>
+			<nail x="153" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id6"/>
+			<label kind="guard" x="119" y="-17">ri == true</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id1"/>
+			<label kind="guard" x="221" y="-85">track&gt;1</label>
+			<label kind="synchronisation" x="229" y="-102">back?</label>
+			<nail x="211" y="-60"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id7"/>
+			<label kind="guard" x="93" y="-153">udr == true</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id1"/>
+			<label kind="guard" x="43" y="-191">track&gt;1</label>
+			<label kind="synchronisation" x="43" y="-174">back?</label>
+			<nail x="93" y="-110"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-93" y="-187">front == true</label>
+			<nail x="-51" y="-102"/>
+		</transition>
+	</template>
+	<template>
+		<name>Input</name>
+		<location id="id9" x="-195" y="127">
+			<name x="-229" y="127">dl</name>
+		</location>
+		<location id="id10" x="195" y="127">
+			<name x="204" y="136">dr</name>
+		</location>
+		<location id="id11" x="8" y="170">
+			<name x="0" y="187">d</name>
+		</location>
+		<location id="id12" x="-8" y="0">
+			<name x="-18" y="-34">neutral</name>
+		</location>
+		<location id="id13" x="-170" y="-170">
+			<name x="-180" y="-204">ul</name>
+		</location>
+		<location id="id14" x="-255" y="-8">
+			<name x="-298" y="-25">l</name>
+		</location>
+		<location id="id15" x="297" y="0">
+			<name x="322" y="-17">r</name>
+		</location>
+		<location id="id16" x="220" y="-170">
+			<name x="210" y="-204">ur</name>
+		</location>
+		<location id="id17" x="25" y="-204">
+			<name x="15" y="-238">u</name>
+		</location>
+		<init ref="id12"/>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-101" y="-46">back!</label>
+			<label kind="assignment" x="-229" y="-119">initial = true, udl = false</label>
+			<nail x="-119" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id13"/>
+			<label kind="assignment" x="-119" y="-136">udl = true, initial = false</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-237" y="-33">back!</label>
+			<label kind="assignment" x="-238" y="-51">initial = true, le = false</label>
+			<nail x="-110" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id14"/>
+			<label kind="assignment" x="-237" y="-4">le = true, initial = false</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-177" y="50">back!</label>
+			<label kind="assignment" x="-246" y="59">initial = true, ddl = false</label>
+			<nail x="-119" y="8"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id9"/>
+			<label kind="assignment" x="-144" y="93">ddl = true, initial = false</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-17" y="114">back!</label>
+			<label kind="assignment" x="-93" y="136">initial = true, dow = false</label>
+			<nail x="-42" y="93"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="assignment" x="0" y="85">dow = true, initial = false</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="77" y="80">back!</label>
+			<label kind="assignment" x="85" y="127">initial = true, ddr = false</label>
+			<nail x="59" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id10"/>
+			<label kind="assignment" x="119" y="59">ddr = true, initial = false</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="171" y="0">back!</label>
+			<label kind="assignment" x="195" y="17">initial = true, ri = false</label>
+			<nail x="153" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id15"/>
+			<label kind="assignment" x="144" y="-17">ri = true, initial = false</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="212" y="-119">back!</label>
+			<label kind="assignment" x="212" y="-102">initial = true, udr = false</label>
+			<nail x="195" y="-51"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id16"/>
+			<label kind="assignment" x="102" y="-85">udr = true, initial = false</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="43" y="-174">back!</label>
+			<label kind="assignment" x="17" y="-187">initial = true, front = false</label>
+			<nail x="93" y="-110"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id17"/>
+			<label kind="assignment" x="-93" y="-144">front = true, initial = false</label>
+			<nail x="-51" y="-102"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+ld = LED();
+ip = Input();
+// List one or more processes to be composed into a system.
+system ld, ip;</system>
+	<queries>
+	</queries>
+</nta>
