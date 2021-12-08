@@ -48,7 +48,7 @@ uint32_t timer;
 uint8_t i2cData[14]; // Buffer for I2C data
 char gyro_state;
 char LED_state;
-
+int8_t countdown=5;
 
 char directions(double kalAngleX,double kalAngleY){
   char dir = '0';
@@ -60,6 +60,7 @@ char directions(double kalAngleX,double kalAngleY){
   bool xz = (kalAngleX < threshold) && (kalAngleX > -threshold);
   bool xq = (kalAngleX < 0) && (kalAngleX > -threshold);
   bool xt = (kalAngleX > 0 ) && (kalAngleY < -15);
+  bool yt = (kalAngleX < 0 ) && (kalAngleY < -15);
   bool xr = (kalAngleX > 0) && (kalAngleY > 10);
   bool yp = (kalAngleY > threshold); 
   bool yc = (kalAngleY > 1);
@@ -70,7 +71,8 @@ char directions(double kalAngleX,double kalAngleY){
   if(xr) dir = '/'; // upper right diagonal
   if(xn && yc) dir = '\\'; // lower right diagonal
   if(xt) dir = '*'; // upper left diagona 
-  if(xn && yn) dir = '$'; // lower left diagonal 
+ // if(xn && yn) dir = '$'; // lower left diagonal 
+  if(yt) dir = '$';
   if(xz && yp) dir = 'u';
   if(xq && yn) dir = 'd';
   return dir;
@@ -288,14 +290,19 @@ void TaskReadCommand(void *pvParameters)
 //       Serial.print("L1");
 #if 1
         sensorValue = MPU6050_get_incline();
-        if(gyro_state == '0' && sensorValue!='0'){
-          xQueueSend(charQueue, &sensorValue, portMAX_DELAY);     
+        if(gyro_state == '0' && sensorValue!='0'&&countdown==0){
+          gyro_state = sensorValue;
+          countdown=100;
+          xQueueSend(charQueue, &sensorValue, portMAX_DELAY);   
             if( xQueueReceive(retQueue, &retValueQueue, portMAX_DELAY) == pdPASS){
-        
+              
             }
         }
-           
+           //Serial.print("in");
+        if(countdown>0)
+          countdown--;
         gyro_state = sensorValue;
+        //Serial.print(countdown);
 #endif
      }
   }
@@ -324,35 +331,53 @@ void TaskSerial(void * pvParameters) {
      if (xQueueReceive(charQueue, &valueFromQueue, portMAX_DELAY) == pdPASS) {
 //        Serial.println(char(valueFromQueue));
         Serial.println("Tx"); //Sending to nrf24_server
-        
+        Serial.println(char(valueFromQueue));
         // Now wait for a reply
         // retry 2 times every 200 ms, could change these value to get it better
         // 1) msg lost, need to resend the message
         // 2) transmission not complete, using bigger timeout interval
         // 3) waiting too long, reduce the timeout interval
         
-        for(int i=0;i<3;i++){                              // retry time is here
+//        for(int i=0;i<3;i++){                              // retry time is here
           nrf24.send(&valueFromQueue, sizeof(valueFromQueue));
-          nrf24.waitPacketSent();
-          if (nrf24.waitAvailableTimeout(200))             // timeout interval is here
+          nrf24.waitPacketSent(); 
+          //taskENTER_CRITICAL();
+          //taskEXIT_CRITICAL(); 
+          if (nrf24.waitAvailableTimeout(500))             // timeout interval is here
           { 
-              // Should be a reply message for us now   
+              // Should be a reply message for us now  
+              
               if (nrf24.recv(buf, &len))
               {
                 Serial.print("Rx:");//got reply: 
                 Serial.println((char*)buf);
-                break;
+//                break;
               }
               else
               {
                 Serial.println("R5"); //recv failed
               }
           }
-          else
-          {
+          else{
               Serial.println("R6");//No reply, is nrf24_server running?"
+              for(int j=0;j<3;j++){
+                uint8_t c='X';
+                nrf24.send(&c, sizeof(c));
+                nrf24.waitPacketSent(); 
+              }
+              if (nrf24.waitAvailableTimeout(500)){
+                if (nrf24.recv(buf, &len)){
+                  Serial.println("expect *XXX in buffer");
+                  Serial.println((char*)buf);
+                    if((char*)buf[0]=='X'){
+                      nrf24.send(&valueFromQueue, sizeof(valueFromQueue));
+                      nrf24.waitPacketSent();   
+                    }
+
+              }
+              }
           }
-        }      
+//        }      
         xQueueSend(retQueue, &valueFromQueue, portMAX_DELAY); 
     } 
 #endif 

@@ -138,6 +138,7 @@ void TaskReadCommand(void *pvParameters)
 
     if (nrf24.available())
     {
+      vTaskDelay(1);
       if (nrf24.recv(buf, &len))
       {
         Serial.print("Rx:");
