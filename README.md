@@ -52,13 +52,13 @@ Tx(.) means the transmission of RF module.  Rx(.) means the reception of RF modu
 |Game Start | Back to Starting point || Good Game |  Score   |
 |Good Game |    Rx(S)     ||  Game Start       |  New Pattern Cursor      |
 
-[Link to Edit](https://app.diagrams.net/#G1d1R1qwncyxGttj_RDuuZV8x_IldtKNCK)
+[State Diagram](https://app.diagrams.net/#G1d1R1qwncyxGttj_RDuuZV8x_IldtKNCK)  
+[Overviw](https://drive.google.com/file/d/1EMjD77yjHDF4gCPTlry1tbx8tKwp95wu/view?usp=sharing)
 
 # Message Sequence between components
 
 ![Sequence Diagram](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/blob/main/pictures/SequenceDiagram.png)
-[State Diagram](https://lucid.app/lucidchart/36681cb7-d538-4060-a365-803737bf8723/edit?viewport_loc=144%2C254%2C1732%2C822%2C0_0&invitationId=inv_58f1c76f-a07f-45b2-a2c0-2ab4e1ce7ecc)
-[Overviw](https://drive.google.com/file/d/1EMjD77yjHDF4gCPTlry1tbx8tKwp95wu/view?usp=sharing)
+[Link to Edit](https://lucid.app/lucidchart/36681cb7-d538-4060-a365-803737bf8723/edit?viewport_loc=144%2C254%2C1732%2C822%2C0_0&invitationId=inv_58f1c76f-a07f-45b2-a2c0-2ab4e1ce7ecc)
 
 
 # State Transition
