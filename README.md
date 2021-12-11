@@ -1,7 +1,7 @@
 # How to run? 
 Upload the code in Arduino1st to the first Arduino.
 Upload the code in Arduino2nd to the second Arduino.
-Connect components as in the wiki page.
+Connect components as in the [wiki page](https://github.com/Maniadarsh/EC545-Motion-Gesture-control/wiki).
 
 # EC545-Motion-Gesture-Control
 Cyberphysical systems project repository.
