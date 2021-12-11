@@ -1,6 +1,10 @@
+# How to run? 
+Upload the code in Arduino1st to the first Arduino.
+Upload the code in Arduino2nd to the second Arduino.
+Connect components as in the wiki page.
+
 # EC545-Motion-Gesture-Control
 Cyberphysical systems project repository.
-Group Name=Product Name= ?
 
 # Introduction and Motivation
 Our Topic: Motion Gesture Control (abbrevated as MGC) is a trend of Human Machine Interface (HMI). It is a good demonstration of cyber-physical system because it translate the movement of object in physical world into digital signal. Our project aims at prototyping of a wireless hand-motion capturing system. We will prove our concept by a interactive game. Our software will run on Arduino Uno board with FreeRTOS
